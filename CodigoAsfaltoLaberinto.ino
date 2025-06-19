@@ -6,6 +6,9 @@
 #define PWM1B 0
 #define PWM2A 0
 #define PWM2B 0
+// Definir valores de velocidad
+#define velocidadConstante 100 // Velocidad mayor para la calibracion y el giro de motores
+#define velocidadCorreccion 80 // Velocidad menor para la calibracion y el giro de motores
 // Definir objetos para sensores de distancia
 VL53L0X S1;
 VL53L0X S2;
@@ -16,6 +19,7 @@ int distanciaDer;
 int distanciaFrente;
 int error;
 bool flagDoblar = false;
+bool flagCentrado = false;
 
 void setup()
 {
@@ -40,72 +44,81 @@ void loop()
   distanciaFrente = S1.readRangeSingleMillimeters();
   distanciaIzq = S2.readRangeSingleMillimeters();
   distanciaDer = S3.readRangeSingleMillimeters();
-  //calcula el error
+  // Calcula el error
   error = distanciaIzq - distanciaDer;
-  //Checkeo de giros
+  // Checkeo de la calibracion del auto con respecto al error (si está centrado, digamos)
+  checkCalibration();
+  // Checkeo de giros
   doblar();
-  //Se realiza la calibración
+  // Se realiza la calibración
   calibration();
-  //Control de los motores
+  // Control de los motores
   controlMotors();
 }
 
-void doblar() //Funcion para doblar siempre que se pueda hacia la izquierda
+void checkCalibration() //Función para el checkeo de la calibración
 {
-  error = distanciaIzq - distanciaDer;
-  if (error >= 18)
+  if (error < -50 || error > 50) //Está descentrado
+  {
+    flagCentrado = true;
+  }
+}
+
+void doblar() //Función para doblar siempre que se pueda hacia la izquierda
+{
+  if (error >= 180)
   {
     flagDoblar = true;
   }
 }
 
-void calibration() //Funcion para calibrar los motores en caso de estar descentrado
+void calibration() // Función para calibrar los motores en caso de estar descentrado
 {
-  if (flagDoblar == false)
+  if (flagDoblar == false && flagCentrado == false)
   {
     do
     {
-      analogWrite(PWM1A, 100);
-      analogWrite(PWM2A, 80);
+      analogWrite(PWM1A, velocidadConstante);
+      analogWrite(PWM2A, velocidadCorreccion);
       distanciaIzq = S2.readRangeSingleMillimeters();
       distanciaDer = S3.readRangeSingleMillimeters();
       error = distanciaIzq - distanciaDer;
     }
-    while (error < -50) //Está más cerca de la pared izquierda
-    analogWrite(PWM1A, 100);
-    analogWrite(PWM2A, 100);
+    while (error < -50) // Está más cerca de la pared izquierda
+
     do
     {
-      analogWrite(PWM1A, 80);
-      analogWrite(PWM2A, 100);
+      analogWrite(PWM1A, velocidadCorreccion);
+      analogWrite(PWM2A, velocidadConstante);
       distanciaIzq = S2.readRangeSingleMillimeters();
       distanciaDer = S3.readRangeSingleMillimeters();
       error = distanciaIzq - distanciaDer;
     }
-    while(error > 50) //Está más cerca de la pared derecha
-    analogWrite(PWM1A, 100);
-    analogWrite(PWM2A, 100);
+    while(error > 50) // Está más cerca de la pared derecha
+    flagCentrado = true;
+    analogWrite(PWM1A, velocidadConstante);
+    analogWrite(PWM2A, velocidadConstante);
   }
 }
 
-void controlMotors() //funcion para el control de los motores
+void controlMotors() // Función para el control de los motores
 {
   if (flagDoblar == true)
   {
-    analogWrite(PWM1B, 80);
-    analogWrite(PWM2A, 80);
+    analogWrite(PWM1B, velocidadCorreccion);
+    analogWrite(PWM2A, velocidadCorreccion);
     delay(1000);
-    analogWrite(PWM1A, 100);
-    analogWrite(PWM2A, 100);
+    analogWrite(PWM1A, velocidadConstante);
+    analogWrite(PWM2A, velocidadConstante);
     delay(500);
-    analogWrite(PWM1B, 80);
-    analogWrite(PWM2A, 80);
+    analogWrite(PWM1B, velocidadCorreccion);
+    analogWrite(PWM2A, velocidadCorreccion);
     delay(1000);
     flagDoblar = false;
   }
   else if (flagDoblar == false)
   {
-    analogWrite(PWM1A, 100);
-    analogWrite(PWM2A, 100);
+    analogWrite(PWM1A, velocidadConstante);
+    analogWrite(PWM2A, velocidadConstante);
   }
 }
