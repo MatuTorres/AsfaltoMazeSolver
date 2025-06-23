@@ -2,10 +2,10 @@
 #include <VL53L0X.h>
 
 // Definir pines para los motores
-#define PWM1A 0
-#define PWM1B 0
-#define PWM2A 0
-#define PWM2B 0
+#define PWM1A 11
+#define PWM1B 10
+#define PWM2A 9
+#define PWM2B 6
 // Definir valores de velocidad
 #define velocidadConstante 100 // Velocidad mayor para la calibracion y el giro de motores
 #define velocidadCorreccion 80 // Velocidad menor para la calibracion y el giro de motores
@@ -13,13 +13,22 @@
 VL53L0X S1;
 VL53L0X S2;
 VL53L0X S3;
-
+// Variables para la logica de los motores
 int distanciaIzq;
 int distanciaDer;
 int distanciaFrente;
 int error;
 bool flagDoblar = false;
 bool flagCentrado = false;
+// Constantes y variables para PID
+const float kp = 0.0;
+const float ki = 0.0;
+const float kd = 0.0;
+float errorPID = 0;
+float lastErrorPID = 0;
+float derivative = 0;
+float integral = 0;
+float correction = 0;
 
 void setup()
 {
@@ -46,6 +55,7 @@ void loop()
   distanciaDer = S3.readRangeSingleMillimeters();
   // Calcula el error
   error = distanciaIzq - distanciaDer;
+  //errorPID = distanciaIzq - distanciaDer;
   // Checkeo de la calibracion del auto con respecto al error (si está centrado, digamos)
   checkCalibration();
   // Checkeo de giros
@@ -54,6 +64,10 @@ void loop()
   calibration();
   // Control de los motores
   controlMotors();
+  // Sistema PID
+  //pidSystem();
+  //Acordarse que esto está en BETA, la primera vez que se pruebe el codigo, COMENTAR LA FUNCION
+  // En el caso de que funcione comentar las funciones "controlMotors()" y "calibration()" y descomentar esta
 }
 
 void checkCalibration() //Función para el checkeo de la calibración
@@ -66,7 +80,7 @@ void checkCalibration() //Función para el checkeo de la calibración
 
 void doblar() //Función para doblar siempre que se pueda hacia la izquierda
 {
-  if (error >= 180)
+  if (error >= 182) // Por Blink-182
   {
     flagDoblar = true;
   }
@@ -121,4 +135,20 @@ void controlMotors() // Función para el control de los motores
     analogWrite(PWM1A, velocidadConstante);
     analogWrite(PWM2A, velocidadConstante);
   }
+}
+
+void pidSystem() // Funcion para el sistema PID
+{
+  errorPID = distanciaIzq - distanciaDer;
+  integral += errorPID;
+  derivative = errorPID - lastErrorPID;
+
+  correction = (kp * errorPID) + (ki * integral) + (kd * derivative);
+  lastErrorPID = errorPID;
+
+  int velocidadIzq = constrain(velocidadConstante - correction, 0, 255);
+  int velocidadDer = constrain(velocidadConstante + correction, 0, 255);
+
+  analogWrite(PWM1A, velocidadIzq);
+  analogWrite(PWM2A, velocidadDer);
 }
