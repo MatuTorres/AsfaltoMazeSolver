@@ -10,9 +10,9 @@
 #define velocidadConstante 100 // Velocidad mayor para la calibracion y el giro de motores
 #define velocidadCorreccion 80 // Velocidad menor para la calibracion y el giro de motores
 // Definir objetos para sensores de distancia
-VL53L0X S1;
-VL53L0X S2;
-VL53L0X S3;
+VL53L0X S1; // Frontal
+VL53L0X S2; // Izquierdo
+VL53L0X S3; // Derecho
 // Variables para la logica de los motores
 int distanciaIzq;
 int distanciaDer;
@@ -68,6 +68,7 @@ void loop()
   //pidSystem();
   //Acordarse que esto está en BETA, la primera vez que se pruebe el codigo, COMENTAR LA FUNCION
   // En el caso de que funcione comentar las funciones "controlMotors()" y "calibration()" y descomentar esta
+  printSensors();
 }
 
 void checkCalibration() //Función para el checkeo de la calibración
@@ -151,4 +152,20 @@ void pidSystem() // Funcion para el sistema PID
 
   analogWrite(PWM1A, velocidadIzq);
   analogWrite(PWM2A, velocidadDer);
+}
+
+void printSensors()
+{
+  Serial.print("Sensor Frontal: ");
+  int S1Value = S1.readRangeSingleMillimeters();
+  Serial.print(S1Value);
+  Serial.println("mm");
+  Serial.print("Sensor Izquierdo: ");
+  int S2Value = S2.readRangeSingleMillimeters();
+  Serial.print(S2Value);
+  Serial.println("mm");
+  Serial.print("Sensor Frontal: ");
+  int S1Value = S3.readRangeSingleMillimeters();
+  Serial.print(S1Value);
+  Serial.println("mm");
 }
