@@ -14,10 +14,10 @@ VL53L0X S1; // Frontal
 VL53L0X S2; // Izquierdo
 VL53L0X S3; // Derecho
 // Variables para la logica de los motores
-int distanciaIzq;
-int distanciaDer;
-int distanciaFrente;
-int error;
+uint16_t distanciaIzq;
+uint16_t distanciaDer;
+uint16_t distanciaFrente;
+uint16_t error;
 bool flagDoblar = false;
 bool flagCentrado = false;
 // Constantes y variables para PID
@@ -32,6 +32,7 @@ float correction = 0;
 
 void setup()
 {
+  Serial.begin(9600);
   Wire.begin();
   //Setup de Motores
   pinMode(PWM1A, OUTPUT);
@@ -45,14 +46,18 @@ void setup()
   S2.setAddress(0x31);
   S3.init();
   S3.setAddress(0x32);
+  S1.startContinuous();
+  S2.startContinuous();
+  S3.startContinuous();
 }
 
 void loop()
 {
+  printSensors();
   //Lee los valores de cada sensores y los guarda en su variable correspondiente
-  distanciaFrente = S1.readRangeSingleMillimeters();
-  distanciaIzq = S2.readRangeSingleMillimeters();
-  distanciaDer = S3.readRangeSingleMillimeters();
+  distanciaFrente = S1.readRangeContinuousMillimeters();
+  distanciaIzq = S2.readRangeContinuousMillimeters();
+  distanciaDer = S3.readRangeContinuousMillimeters();
   // Calcula el error
   error = distanciaIzq - distanciaDer;
   //errorPID = distanciaIzq - distanciaDer;
@@ -68,7 +73,6 @@ void loop()
   //pidSystem();
   //Acordarse que esto está en BETA, la primera vez que se pruebe el codigo, COMENTAR LA FUNCION
   // En el caso de que funcione comentar las funciones "controlMotors()" y "calibration()" y descomentar esta
-  printSensors();
 }
 
 void checkCalibration() //Función para el checkeo de la calibración
@@ -95,8 +99,8 @@ void calibration() // Función para calibrar los motores en caso de estar descen
     {
       analogWrite(PWM1A, velocidadConstante);
       analogWrite(PWM2A, velocidadCorreccion);
-      distanciaIzq = S2.readRangeSingleMillimeters();
-      distanciaDer = S3.readRangeSingleMillimeters();
+      distanciaIzq = S2.readRangeContinuousMillimeters();
+      distanciaDer = S3.readRangeContinuousMillimeters();
       error = distanciaIzq - distanciaDer;
     }
     while (error < -50); // Está más cerca de la pared izquierda
@@ -105,8 +109,8 @@ void calibration() // Función para calibrar los motores en caso de estar descen
     {
       analogWrite(PWM1A, velocidadCorreccion);
       analogWrite(PWM2A, velocidadConstante);
-      distanciaIzq = S2.readRangeSingleMillimeters();
-      distanciaDer = S3.readRangeSingleMillimeters();
+      distanciaIzq = S2.readRangeContinuousMillimeters();
+      distanciaDer = S3.readRangeContinuousMillimeters();
       error = distanciaIzq - distanciaDer;
     }
     while(error > 50); // Está más cerca de la pared derecha
@@ -157,15 +161,15 @@ void pidSystem() // Funcion para el sistema PID
 void printSensors()
 {
   Serial.print("Sensor Frontal: ");
-  int S1Value = S1.readRangeSingleMillimeters();
+  uint16_t S1Value = S1.readRangeContinuousMillimeters();
   Serial.print(S1Value);
   Serial.println("mm");
   Serial.print("Sensor Izquierdo: ");
-  int S2Value = S2.readRangeSingleMillimeters();
+  uint16_t S2Value = S2.readRangeContinuousMillimeters();
   Serial.print(S2Value);
   Serial.println("mm");
   Serial.print("Sensor Frontal: ");
-  int S3Value = S3.readRangeSingleMillimeters();
+  uint16_t S3Value = S3.readRangeContinuousMillimeters();
   Serial.print(S3Value);
   Serial.println("mm");
 }
