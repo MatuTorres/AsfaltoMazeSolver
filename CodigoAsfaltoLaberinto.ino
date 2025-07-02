@@ -98,7 +98,7 @@ void calibration() // Función para calibrar los motores en caso de estar descen
       distanciaDer = S3.readRangeSingleMillimeters();
       error = distanciaIzq - distanciaDer;
     }
-    while (error < -50) // Está más cerca de la pared izquierda
+    while (error < -50); // Está más cerca de la pared izquierda
 
     do
     {
@@ -108,7 +108,7 @@ void calibration() // Función para calibrar los motores en caso de estar descen
       distanciaDer = S3.readRangeSingleMillimeters();
       error = distanciaIzq - distanciaDer;
     }
-    while(error > 50) // Está más cerca de la pared derecha
+    while(error > 50); // Está más cerca de la pared derecha
     flagCentrado = true;
     analogWrite(PWM1A, velocidadConstante);
     analogWrite(PWM2A, velocidadConstante);
