@@ -165,7 +165,7 @@ void printSensors()
   Serial.print(S2Value);
   Serial.println("mm");
   Serial.print("Sensor Frontal: ");
-  int S1Value = S3.readRangeSingleMillimeters();
-  Serial.print(S1Value);
+  int S3Value = S3.readRangeSingleMillimeters();
+  Serial.print(S3Value);
   Serial.println("mm");
 }
